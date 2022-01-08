@@ -23,6 +23,10 @@
         margin: 20px;
         text-align: center;
     }
+    
+    .title a:visited {
+        color: aqua;
+    }
 
     #warn {
         display: block;
@@ -35,7 +39,7 @@
     }
 </style>
 <body>
-<div class="title">基于opencv.js（webassembly）前端人脸跟踪，请允许摄像头访问权限</div>
+<div class="title">基于opencv.js（webassembly）前端人脸跟踪，请允许摄像头访问权限 <a href="https://github.com/QutantumProgrammer/opencv-demo"> source code</a></div>
 <div id="warn-title">opencv.js 初始化中</div>
 <canvas id="warn" width="200" height="12"></canvas>
 <video id="videoInput" width="320" height="240"></video>
@@ -124,7 +128,11 @@
 
       const {width, height} = streaming.getVideoTracks()[0].getSettings();
 
-      const displayWidth = 200;
+      let displayWidth = 400;
+      
+      // 移动端降低分辨率以提升性能
+      if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) displayWidth = 160
+
       const displayHeight = displayWidth / width * height;
       video.setAttribute('width', displayWidth);
       video.setAttribute('height', displayHeight);
