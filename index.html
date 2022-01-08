@@ -226,7 +226,7 @@
         if (!opencvRunning) window.startRunPromiseResolve();
         opencvRunning = true;
         
-        const FPS = 60;
+        const FPS = 30;
         const delay = 1000 / FPS - (Date.now() - begin);
         setTimeout(processVideo, delay);
       }
