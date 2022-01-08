@@ -23,6 +23,10 @@
         margin: 20px;
         text-align: center;
     }
+
+    .title a {
+        color: #ffad00;
+    }
     
     .title a:visited {
         color: aqua;
@@ -131,7 +135,7 @@
       let displayWidth = 400;
       
       // 移动端降低分辨率以提升性能
-      if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) displayWidth = 160
+      if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) displayWidth = 300
 
       const displayHeight = displayWidth / width * height;
       video.setAttribute('width', displayWidth);
