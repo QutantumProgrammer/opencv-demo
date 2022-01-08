@@ -125,6 +125,7 @@
 <script>
   // openCV 核心实现
   const utils = new Utils('errorMessage');
+  const ZOOM = 3;
 
   const startCameraAndSetDisplaySize = async () => {
     try {
@@ -133,10 +134,10 @@
 
       const {width, height} = streaming.getVideoTracks()[0].getSettings();
 
-      let displayWidth = 400;
+      let displayWidth = 260;
       
       // 移动端降低分辨率以提升性能
-      if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) displayWidth = 300
+      if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) displayWidth = 160
 
       const displayHeight = displayWidth / width * height;
       video.setAttribute('width', displayWidth);
@@ -176,7 +177,7 @@
       
       const pointLeftTop = new cv.Point(x, y);
       const pointRightBottom = new cv.Point(x + width, y + height);
-      cv.rectangle(dst, pointLeftTop, pointRightBottom, [255, 80, 0, 255], 2);
+      cv.rectangle(dst, pointLeftTop, pointRightBottom, [255, 80, 0, 255], 1.2);
 
       // const pointFont = new cv.Point(face.x, face.y - 10);
       // cv.putText(dst, 'cv: handsome', pointFont, cv.FONT_HERSHEY_SIMPLEX, .8, [255, 120, 0, 255], 2, cv.LINE_AA);
@@ -191,13 +192,13 @@
     for (let i = 0; i < faces.size(); ++i) {
       const { x, y } = faces.get(i);
       // 因为在 openCV 层面使用了缩放 2
-      context.font = 'bold 40px sans-serif';
+      context.font = `bold ${16 * ZOOM}px sans-serif`;
       context.fillStyle = '#ffad00';
       if (tipRectCount % 3 === 0) {
-        context.rect(2 * x, 2 * (y - 24), 2 * 4, 2 * 14);
+        context.rect(ZOOM * x, ZOOM * (y - 24), ZOOM * 4, ZOOM * 14);
         context.fill();
       }
-      context.fillText('handsome', 2 * (x + 8), 2 * (y - 10));
+      context.fillText('handsome', ZOOM * (x + 8), ZOOM * (y - 10));
     }
   };
 
@@ -227,7 +228,7 @@
         // detect faces.
         classifier.detectMultiScale(gray, faces, 1.1, 3, 0);
         drawFaceRect(faces, dst);
-        let dSize = new cv.Size(dst.cols * 2, dst.rows * 2);
+        let dSize = new cv.Size(dst.cols * ZOOM, dst.rows * ZOOM);
         cv.resize(dst, dst, dSize, 0, 0, cv.INTER_AREA);
         cv.imshow('canvasOutput', dst);
         drawTitleOnCanvas(faces);
