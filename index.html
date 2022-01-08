@@ -5,9 +5,9 @@
   <title>Title</title>
 </head>
 <style>
-
     body {
-        background: #e5e5e5;
+        color: #ffad00;;
+        background: #1f1e1e;
     }
 
     #canvasOutput {
@@ -24,19 +24,94 @@
         text-align: center;
     }
 
+    #warn {
+        display: block;
+        margin: 0 auto;
+    }
+
+    #warn-title {
+        margin: 8px;
+        text-align: center;
+    }
 </style>
 <body>
-<div class="title">基于opencv.js（webassembly）前端人脸跟踪</div>
+<div class="title">基于opencv.js（webassembly）前端人脸跟踪，请允许摄像头访问权限</div>
+<div id="warn-title">opencv.js 初始化中</div>
+<canvas id="warn" width="200" height="12"></canvas>
 <video id="videoInput" width="320" height="240"></video>
 <canvas id="canvasOutput"></canvas>
 </body>
 <script type="text/javascript">
   let opencvReadyPromiseResolve;
   window.opencvReadyPromise = new Promise(resolve => opencvReadyPromiseResolve = resolve);
+  window.startRunPromise = new Promise(resolve => window.startRunPromiseResolve = resolve);
 
-  function onOpenCvReady() {
+  // TODO opencv 初始化状体不符合预期，使用时可能未初始化完毕，需要查看api找出准确时机
+  const checkOpencv = async () => {
+    if (window.cv.Mat) return;
+    await new Promise(resolve => setTimeout(resolve, 20));
+    await checkOpencv();
+  };
+  async function onOpenCvReady() {
+    await checkOpencv();
     opencvReadyPromiseResolve();
   }
+</script>
+<script type="text/javascript">
+  const context = document.querySelector('#warn').getContext('2d');
+  context.globalCompositeOperation = 'lighter';
+
+  let redRectX = 200;
+  let lastTime;
+  let mark = 0;
+  let frameId;
+  const drawWarn = () => {
+    if (!lastTime || new Date().getTime() - lastTime > 30) {
+      lastTime = new Date().getTime();
+      context.clearRect(0, 0, 500, 500);
+      const w = 9;
+
+      for (let i = 0; i < 40; i++) {
+        context.beginPath();
+        context.moveTo(-12 + i * w + mark, 12);
+        context.lineTo(-6 + i * w + mark, 12);
+        context.lineTo(0 + i * w + mark, 0);
+        context.lineTo(-6 + i * w + mark, 0);
+        context.closePath();
+        context.fillStyle = '#ffad00';
+        context.fill();
+      }
+      if (mark < 7) {
+        mark++;
+      } else {
+        mark = 0;
+      }
+
+      context.fillStyle = 'red';
+      context.beginPath();
+      context.moveTo(redRectX, 12);
+      context.lineTo(redRectX + 16, 12);
+      context.lineTo(redRectX + 8, 0);
+      context.lineTo(redRectX - 8, 0);
+      context.closePath();
+      context.fillStyle = 'red';
+      context.fill();
+      redRectX -= 2;
+      if (redRectX < -20) {
+        redRectX = 200;
+      }
+    }
+
+    frameId = window.requestAnimationFrame(drawWarn);
+  }
+
+  drawWarn();
+
+  window.startRunPromise.then(() => {
+    window.cancelAnimationFrame(frameId);
+    document.querySelector('#warn').remove();
+    document.querySelector('#warn-title').remove();
+  });
 </script>
 <script src="./lib/utils.js" type="text/javascript"></script>
 <script>
@@ -49,7 +124,7 @@
 
       const {width, height} = streaming.getVideoTracks()[0].getSettings();
 
-      const displayWidth = 400;
+      const displayWidth = 200;
       const displayHeight = displayWidth / width * height;
       video.setAttribute('width', displayWidth);
       video.setAttribute('height', displayHeight);
@@ -102,7 +177,7 @@
     for (let i = 0; i < faces.size(); ++i) {
       const face = faces.get(i);
       context.font = 'bold 20px sans-serif';
-      context.fillStyle = 'rgb(255,80,0)';
+      context.fillStyle = '#ffad00';
       if (tipRectCount % 3 === 0) {
         context.rect(face.x, face.y - 24, 4, 14);
         context.fill();
@@ -111,6 +186,7 @@
     }
   };
 
+  let opencvRunning = false;
   const run = async () => {
     try {
       const {video, streaming} = await startCameraAndSetDisplaySize();
@@ -138,7 +214,10 @@
         drawFaceRect(faces, dst);
         cv.imshow('canvasOutput', dst);
         drawTitleOnCanvas(faces);
-
+        
+        if (!opencvRunning) window.startRunPromiseResolve();
+        opencvRunning = true;
+        
         const FPS = 60;
         const delay = 1000 / FPS - (Date.now() - begin);
         setTimeout(processVideo, delay);
